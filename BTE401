@@ -1,0 +1,35 @@
+from Bio import Entrez, SeqIO
+
+def fetch_sequence(accession_number):
+    Entrez.email = "your_email@example.com"  # Replace with your email
+    handle = Entrez.efetch(db="nuccore", id=accession_number, rettype="fasta", retmode="text")
+    record = SeqIO.read(handle, "fasta")
+    handle.close()
+    return record.seq
+
+def find_gene(dna_sequence, promoter_sequence):
+    promoter_index = dna_sequence.find(promoter_sequence)
+    if promoter_index != -1 and promoter_index <= 30:
+        start_codon_index = promoter_index + len(promoter_sequence)
+        start_codon = dna_sequence[start_codon_index:start_codon_index + 3]
+        stop_codons = ['TAA', 'TAG', 'TGA']
+        if start_codon == 'ATG':
+            for i in range(start_codon_index + 3, len(dna_sequence) - 2, 3):
+                if dna_sequence[i:i + 3] in stop_codons:
+                    gene_length = (i - start_codon_index) // 3
+                    if gene_length >= 50:
+                        return "Gene Found"
+                    else:
+                        return "Gene not found"
+            return "Gene not found"
+        else:
+            return "Gene not found"
+    else:
+        return "Gene not found"
+
+accession_number = input("Enter NCBI Accession number: ")
+promoter_sequence = input("Enter promoter sequence: ")
+
+dna_sequence = fetch_sequence(accession_number)
+result = find_gene(dna_sequence, promoter_sequence)
+print(result)
